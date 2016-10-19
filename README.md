@@ -37,7 +37,7 @@ y0 = 600.1
 # Load the Grism Configuration file
 C = grismconf.Config(“NIRCAM_R.conf")
 # Compute the t values corresponding to the exact offsets
-ts = C,INVDISPX(“A”,x0,y0,dxs)
+ts = C.INVDISPX(“A”,x0,y0,dxs)
 # Compute the dys values for the same pixels
 dys = C.DISPY(“A”,x0,y0,ts)
 # Compute wavelength of each of the pixels
