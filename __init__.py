@@ -1,0 +1,1 @@
+from grismconf import *
