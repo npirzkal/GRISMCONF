@@ -24,13 +24,18 @@ class Config(object):
         self.SENS = {}
         self.SENS_data = {}
 
+        # Wavelength range of the grism
         self.WRANGE = {}
+
+        # Extent of FOV in detector pixel
+        self.XRANGE = {}
+        self.YRANGE = {}
 
         if DIRFILTER!=None:
             # We get the wedge offset values for this direct filter
-            r = self.__get_value("WEDGE_%s" % (DIRFILTER))
-            self.wx = float(r[0])
-            self.wy = float(r[1])
+            r = self.__get_value("WEDGE_%s" % (DIRFILTER),type=float)
+            self.wx = r[0]
+            self.wy = r[1]
         else:
             self.wx = 0.
             self.wy = 0.
@@ -53,6 +58,9 @@ class Config(object):
 
             # Add direct filter trnasmssion here
             self.WRANGE[order] = [np.min(self.SENS_data[order][0]),np.max(self.SENS_data[order][0])]
+
+            self.XRANGE[order] = self.__get_value("XRANGE_%s" % (order),type=float)
+            self.YRANGE[order] = self.__get_value("YRANGE_%s" % (order),type=float)
 
     def __apply_passband(self,order,passband):
         """A helper function that applies an additional passband to the existing sensitivity. This modifies self.SENS_data and also recompute the interpolation function stored in self.SENS"""
@@ -159,7 +167,7 @@ class Config(object):
 
         return arr            
 
-    def __get_value(self,str):
+    def __get_value(self,str,type=None):
         """Helper function to simply return the value for a simple keyword parameters
         in the config file."""
         
@@ -167,9 +175,16 @@ class Config(object):
             ws = l.split()
             if len(ws)>0 and ws[0]==str:
                 if len(ws)==2:
-                    return ws[1]
+                    if type==None:
+                        return ws[1]
+                    elif type==float:
+                        return float(ws[1])
                 else:
-                    return ws[1:]
+                    if type==None:
+                        return ws[1:]
+                    elif type==float:
+                        return [float(x) for x in ws[1:]]
+
         return None
 
 
