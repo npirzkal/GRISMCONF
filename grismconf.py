@@ -56,7 +56,7 @@ class Config(object):
 
             self.SENS[order] = interp1d(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
 
-            # Add direct filter trnasmssion here
+            # To do: Add direct filter trnasmssion here
             self.WRANGE[order] = [np.min(self.SENS_data[order][0]),np.max(self.SENS_data[order][0])]
 
             self.XRANGE[order] = self.__get_value("XRANGE_%s" % (order),type=float)
