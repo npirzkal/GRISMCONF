@@ -5,6 +5,27 @@ from astropy.io import fits
 from astropy.table import Table
 from scipy.interpolate import interp1d
 
+
+class interp1d_picklable:
+    """ class wrapper for piecewise linear function
+    """
+    def __init__(self, xi, yi, **kwargs):
+        self.xi = xi
+        self.yi = yi
+        self.args = kwargs
+        self.f = interp1d(xi, yi, **kwargs)
+
+    def __call__(self, xnew):
+        return self.f(xnew)
+
+    def __getstate__(self):
+        return self.xi, self.yi, self.args
+
+    def __setstate__(self, state):
+        self.f = interp1d(state[0], state[1], **state[2])
+
+
+
 class Config(object):
     """Class to read and hold GRISM configuration info"""
     def __init__(self,GRISM_CONF,DIRFILTER=None,passband=None):
@@ -54,7 +75,8 @@ class Config(object):
             if passband!=None:
                 self.__apply_passband(order,passband)
 
-            self.SENS[order] = interp1d(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
+#            if not pool:
+            self.SENS[order] = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
 
             # To do: Add direct filter trnasmssion here
             self.WRANGE[order] = [np.min(self.SENS_data[order][0]),np.max(self.SENS_data[order][0])]
@@ -65,19 +87,38 @@ class Config(object):
     def __apply_passband(self,order,passband):
         """A helper function that applies an additional passband to the existing sensitivity. This modifies self.SENS_data and also recompute the interpolation function stored in self.SENS"""
 
+        # Apply grism sensitibity to filter... i.e. use filter as wavelength basis
+        fs = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
         tab = Table.read(passband,format="ascii")
 
-        f = interp1d(np.array(tab["col1"]),np.array(tab["col2"]),bounds_error=False,fill_value=0.)
+        xs = []
+        ys = []
+        for i,l in enumerate(np.array(tab["col1"])):
+            xs.append(l)
+            ys.append(tab["col2"][i] * fs(l))
+
+        
+        self.SENS_data[order][1] = np.asarray(ys)
+        self.SENS_data[order][0] = np.asarray(xs)
+
+        self.SENS[order] = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
+
+        return
+
+        tab = Table.read(passband,format="ascii")
+        f = interp1d_picklable(np.array(tab["col1"]),np.array(tab["col2"]),bounds_error=False,fill_value=0.)
         for i,l in enumerate(self.SENS_data[order][0]):
             self.SENS_data[order][1][i] = self.SENS_data[order][1][i] * f(l)
-
         vg = np.nonzero(self.SENS_data[order][1])[0]
 
         self.SENS_data[order][1] = self.SENS_data[order][1][vg[0]-1:vg[-1]+2]
         self.SENS_data[order][0] = self.SENS_data[order][0][vg[0]-1:vg[-1]+2]
 
-        self.SENS[order] = interp1d(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
+        self.SENS[order] = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
 
+
+
+        sys.exit(1)
 
 
     def DISPL(self,order,x0,y0,t):
