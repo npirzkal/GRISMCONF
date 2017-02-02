@@ -28,7 +28,7 @@ class interp1d_picklable:
 
 class Config(object):
     """Class to read and hold GRISM configuration info"""
-    def __init__(self,GRISM_CONF,DIRFILTER=None,passband=None):
+    def __init__(self,GRISM_CONF,DIRFILTER=None,passband_tab=None):
         """Read in Grism Configuration file and populate various things"""
         self.GRISM_CONF = open(GRISM_CONF).readlines()
         self.GRISM_CONF_PATH = os.path.split(GRISM_CONF)[0]
@@ -72,8 +72,8 @@ class Config(object):
             self.DISPL_POLYNAME[order] = np.shape(self.DISPL_DATA[order])
 
             self.SENS_data[order] = self.__get_sensitivity(order)
-            if passband!=None:
-                self.__apply_passband(order,passband)
+            if passband_tab!=None:
+                self.__apply_passband(order,passband_tab)
 
 #            if not pool:
             self.SENS[order] = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
@@ -84,19 +84,22 @@ class Config(object):
             self.XRANGE[order] = self.__get_value("XRANGE_%s" % (order),type=float)
             self.YRANGE[order] = self.__get_value("YRANGE_%s" % (order),type=float)
 
-    def __apply_passband(self,order,passband):
+    def __apply_passband(self,order,passband_tab):
         """A helper function that applies an additional passband to the existing sensitivity. This modifies self.SENS_data and also recompute the interpolation function stored in self.SENS"""
 
         # Apply grism sensitibity to filter... i.e. use filter as wavelength basis
         fs = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
-        tab = Table.read(passband,format="ascii")
 
         xs = []
         ys = []
-        for i,l in enumerate(np.array(tab["col1"])):
+        overlap = 0
+        for i,l in enumerate(np.array(passband_tab["col1"])):
             xs.append(l)
-            ys.append(tab["col2"][i] * fs(l))
-
+            ys.append(passband_tab["col2"][i] * fs(l))
+            if fs(l)>0:
+                overlap = 1
+        if overlap==0:
+            print "Sensitivity and filter passband do not ovelap. Check units..."
         
         self.SENS_data[order][1] = np.asarray(ys)
         self.SENS_data[order][0] = np.asarray(xs)
@@ -105,20 +108,6 @@ class Config(object):
 
         return
 
-        tab = Table.read(passband,format="ascii")
-        f = interp1d_picklable(np.array(tab["col1"]),np.array(tab["col2"]),bounds_error=False,fill_value=0.)
-        for i,l in enumerate(self.SENS_data[order][0]):
-            self.SENS_data[order][1][i] = self.SENS_data[order][1][i] * f(l)
-        vg = np.nonzero(self.SENS_data[order][1])[0]
-
-        self.SENS_data[order][1] = self.SENS_data[order][1][vg[0]-1:vg[-1]+2]
-        self.SENS_data[order][0] = self.SENS_data[order][0][vg[0]-1:vg[-1]+2]
-
-        self.SENS[order] = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
-
-
-
-        sys.exit(1)
 
 
     def DISPL(self,order,x0,y0,t):
