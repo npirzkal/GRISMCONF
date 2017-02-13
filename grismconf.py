@@ -80,7 +80,7 @@ class Config(object):
 
             # To do: Add direct filter trnasmssion here
             self.WRANGE[order] = [np.min(self.SENS_data[order][0]),np.max(self.SENS_data[order][0])]
-
+ 
             self.XRANGE[order] = self.__get_value("XRANGE_%s" % (order),type=float)
             self.YRANGE[order] = self.__get_value("YRANGE_%s" % (order),type=float)
 
