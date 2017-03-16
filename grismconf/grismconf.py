@@ -78,8 +78,10 @@ class Config(object):
 #            if not pool:
             self.SENS[order] = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
 
-            # To do: Add direct filter trnasmssion here
-            self.WRANGE[order] = [np.min(self.SENS_data[order][0]),np.max(self.SENS_data[order][0])]
+            # To do: Add direct filter transmssion here
+            wmin = np.min(self.SENS_data["+1"][0][self.SENS_data["+1"][1]!=0])
+            wmax = np.max(self.SENS_data["+1"][0][self.SENS_data["+1"][1]!=0])
+            self.WRANGE[order] = [wmin,wmax]
  
             self.XRANGE[order] = self.__get_value("XRANGE_%s" % (order),type=float)
             self.YRANGE[order] = self.__get_value("YRANGE_%s" % (order),type=float)
