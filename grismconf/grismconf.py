@@ -110,7 +110,7 @@ class Config(object):
             if fs(l)>0:
                 overlap = 1
         if overlap==0:
-            print "Sensitivity and filter passband do not ovelap. Check units..."
+            print("Sensitivity and filter passband do not ovelap. Check units...")
         
         self.SENS_data[order][1] = np.asarray(ys)
         self.SENS_data[order][0] = np.asarray(xs)
@@ -206,7 +206,7 @@ class Config(object):
             if len(ws)>0 and str in ws[0]:
                 i = int(ws[0].split(str)[-1])
                 if len(ws)-1 !=m:
-                    print "Wrong format for ",GRISM_CONF,name,order
+                    print("Wrong format for ",GRISM_CONF,name,order)
                     sys.exit(10)
                 vals = [float(ww) for ww in ws[1:]]
                 arr[i,0:m] = vals

@@ -108,9 +108,9 @@ def test(n,m):
 	y = 100.
 
 	d = POLY[(n,m)](e,x,y,0.)
-	print "d:",d
+	print("d:",d)
 	t = INVPOLY[(n,m)](e,x,y,d)
-	print "t:",t
+	print("t:",t)
 
 if __name__=="__main__":
 	test(1,0)
