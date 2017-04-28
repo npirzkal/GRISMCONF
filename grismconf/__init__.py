@@ -1,1 +1,2 @@
-from grismconf import *
+from .grismconf import Config
+#from . import poly
