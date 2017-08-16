@@ -5,7 +5,7 @@ from astropy.io import fits
 from astropy.table import Table
 from scipy.interpolate import interp1d
 
-__version__ = 1.1
+__version__ = 1.2
 
 class interp1d_picklable:
     """ class wrapper for piecewise linear function
@@ -29,7 +29,7 @@ class interp1d_picklable:
 
 class Config(object):
     """Class to read and hold GRISM configuration info"""
-    def __init__(self,GRISM_CONF,DIRFILTER=None,cross_filter=None):
+    def __init__(self,GRISM_CONF,DIRFILTER=None):
         """Read in Grism Configuration file and populate various things"""
         self.__version__=__version__
         self.GRISM_CONF = open(GRISM_CONF).readlines()
@@ -75,18 +75,10 @@ class Config(object):
 
             self.SENS_data[order] = self.__get_sensitivity(order)
 
-            wmin = np.min(self.SENS_data[order][0][self.SENS_data[order][1]!=0])
-            wmax = np.max(self.SENS_data[order][0][self.SENS_data[order][1]!=0])
+            vg = self.SENS_data[order][1]>np.max(self.SENS_data[order][1])*1e-3
+            wmin = np.min(self.SENS_data[order][0][vg])
+            wmax = np.max(self.SENS_data[order][0][vg])
             self.WRANGE[order] = [wmin,wmax]
- 
-            if cross_filter!=None:
-                # get name of filter bandpass from config file
-                filter_filename = self.__get_value("FILTER_%s" % (cross_filter))
-                filter_filename = os.path.join(self.GRISM_CONF_PATH,filter_filename)
-                passband_tab = Table.read(filter_filename,format="ascii.no_header",data_start=1)
-                # Convert bandpass to angstrom
-                passband_tab['col1'] = passband_tab['col1']*10000
-                self.__apply_passband(order,passband_tab,threshold=1e-4)
 
 #            if not pool:
             self.SENS[order] = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
@@ -94,37 +86,6 @@ class Config(object):
             
             self.XRANGE[order] = self.__get_value("XRANGE_%s" % (order),type=float)
             self.YRANGE[order] = self.__get_value("YRANGE_%s" % (order),type=float)
-
-    def __apply_passband(self,order,passband_tab,threshold):
-        """A helper function that applies an additional passband to the existing sensitivity. This modifies self.SENS_data and also recompute the interpolation function stored in self.SENS"""
-
-        # Apply grism sensitibity to filter... i.e. use filter as wavelength basis
-        fs = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
-
-        xs = []
-        ys = []
-        overlap = 0
-        for i,l in enumerate(np.array(passband_tab["col1"])):
-            xs.append(l)
-            ys.append(passband_tab["col2"][i] * fs(l))
-            if fs(l)>0:
-                overlap = 1
-        if overlap==0:
-            print "Sensitivity and filter passband do not ovelap. Check units..."
-        
-        self.SENS_data[order][1] = np.asarray(ys)
-        self.SENS_data[order][0] = np.asarray(xs)
-
-        wmin = np.min(self.SENS_data[order][0][self.SENS_data[order][1]>np.max(self.SENS_data[order][1])*threshold])
-        wmax = np.max(self.SENS_data[order][0][self.SENS_data[order][1]>np.max(self.SENS_data[order][1])*threshold])
-        #print "Bandpass reduced to ===>",wmin,wmax
-        self.WRANGE[order] = [wmin,wmax]
-
-        self.SENS[order] = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
-
-        return
-
-
 
     def DISPL(self,order,x0,y0,t):
         """DISPL() returns the wavelength l = DISPL(x0,y0,t) where x0,y0 is the 
