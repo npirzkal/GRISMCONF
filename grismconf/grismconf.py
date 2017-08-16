@@ -1,4 +1,4 @@
-import poly
+from . import poly
 import numpy as np 
 import os
 from astropy.io import fits
@@ -19,13 +19,11 @@ class interp1d_picklable:
     def __call__(self, xnew):
         return self.f(xnew)
 
-    def __getstate__(self):
+    def _getstate__(self):
         return self.xi, self.yi, self.args
 
     def __setstate__(self, state):
         self.f = interp1d(state[0], state[1], **state[2])
-
-
 
 class Config(object):
     """Class to read and hold GRISM configuration info"""
@@ -33,16 +31,17 @@ class Config(object):
         """Read in Grism Configuration file and populate various things"""
         self.__version__=__version__
         self.GRISM_CONF = open(GRISM_CONF).readlines()
-        self.GRISM_CONF_PATH = os.path.split(GRISM_CONF)[0]
+        self.GRISM_CONF_PATH = os.path.dirname(GRISM_CONF)
+        self.GRISM_CONF_FILE = os.path.basename(GRISM_CONF)
 
-        self.orders = self.__get_orders()
-        self.DISPX_DATA = {}
-        self.DISPY_DATA = {}
-        self.DISPL_DATA = {}
+        self.orders = self._get_orders()
+        self._DISPX_data = {}
+        self._DISPY_data = {}
+        self._DISPL_data = {}
 
-        self.DISPX_POLYNAME = {}
-        self.DISPY_POLYNAME = {}
-        self.DISPL_POLYNAME = {}
+        self._DISPX_polyname = {}
+        self._DISPY_polyname = {}
+        self._DISPL_polyname = {}
 
         self.SENS = {}
         self.SENS_data = {}
@@ -56,7 +55,7 @@ class Config(object):
 
         if DIRFILTER!=None:
             # We get the wedge offset values for this direct filter
-            r = self.__get_value("WEDGE_%s" % (DIRFILTER),type=float)
+            r = self._get_value("WEDGE_%s" % (DIRFILTER),type=float)
             self.wx = r[0]
             self.wy = r[1]
         else:
@@ -64,75 +63,180 @@ class Config(object):
             self.wy = 0.
 
         for order in self.orders:    
-            self.DISPX_DATA[order] = self.__get_parameters("DISPX",order)
-            self.DISPY_DATA[order] = self.__get_parameters("DISPY",order)
-            self.DISPL_DATA[order] = self.__get_parameters("DISPL",order)
-            self.SENS[order] = self.__get_sensitivity(order)
+            self._DISPX_data[order] = self._get_parameters("DISPX",order)
+            self._DISPY_data[order] = self._get_parameters("DISPY",order)
+            self._DISPL_data[order] = self._get_parameters("DISPL",order)
+            self.SENS[order] = self._get_sensitivity(order)
             
-            self.DISPX_POLYNAME[order] = np.shape(self.DISPX_DATA[order])
-            self.DISPY_POLYNAME[order] = np.shape(self.DISPY_DATA[order])
-            self.DISPL_POLYNAME[order] = np.shape(self.DISPL_DATA[order])
+            self._DISPX_polyname[order] = np.shape(self._DISPX_data[order])
+            self._DISPY_polyname[order] = np.shape(self._DISPY_data[order])
+            self._DISPL_polyname[order] = np.shape(self._DISPL_data[order])
 
-            self.SENS_data[order] = self.__get_sensitivity(order)
+            self.SENS_data[order] = self._get_sensitivity(order)
 
             vg = self.SENS_data[order][1]>np.max(self.SENS_data[order][1])*1e-3
             wmin = np.min(self.SENS_data[order][0][vg])
             wmax = np.max(self.SENS_data[order][0][vg])
             self.WRANGE[order] = [wmin,wmax]
 
-#            if not pool:
             self.SENS[order] = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
+        
+            self.XRANGE[order] = self._get_value("XRANGE_%s" % (order),type=float)
+            self.YRANGE[order] = self._get_value("YRANGE_%s" % (order),type=float)
 
+    @staticmethod
+    def _rotate_coords(dx, dy, theta=0, origin=[0,0]):
+        """Rotate cartesian coordinates CW about an origin
+        
+        Parameters
+        ----------
+        dx, dy : float or `~numpy.ndarray`
+            x and y coordinages
+                    
+        theta : float
+            CW rotation angle, in radians
             
-            self.XRANGE[order] = self.__get_value("XRANGE_%s" % (order),type=float)
-            self.YRANGE[order] = self.__get_value("YRANGE_%s" % (order),type=float)
+        origin : [float,float]
+            Origin about which to rotate
+        
+        Returns
+        -------
+        dxr, dyr : float or `~numpy.ndarray`
+            Rotated versions of `dx` and `dy`
+            
+        """
+        _mat = np.array([[np.cos(theta), -np.sin(theta)],
+                     [np.sin(theta), np.cos(theta)]])
+
+        rot = np.dot(np.array([dx-origin[0], dy-origin[1]]).T, _mat)
+        dxr = rot[:,0]+origin[0]
+        dyr = rot[:,1]+origin[1]
+        return dxr, dyr
 
     def DISPL(self,order,x0,y0,t):
         """DISPL() returns the wavelength l = DISPL(x0,y0,t) where x0,y0 is the 
         position on the detector and 0<t<1"""
-        return poly.POLY[self.DISPL_POLYNAME[order]](self.DISPL_DATA[order],x0,y0,t)
+        return poly.POLY[self._DISPL_polyname[order]](self._DISPL_data[order],x0,y0,t)
 
     def DDISPL(self,order,x0,y0,t):
         """DDISPL returns the wavelength 1st derivative with respect to t  l =  d(DISPL(x0,y0,t))/dt where x0,y0 is the position on the detector and 0<t<1"""
-        return poly.DPOLY[self.DISPL_POLYNAME[order]](self.DISPL_DATA[order],x0,y0,t)
+        return poly.DPOLY[self._DISPL_polyname[order]](self._DISPL_data[order],x0,y0,t)
 
-    def DISPX(self,order,x0,y0,t):
+    def DISPXY(self, order, x0, y0, t, theta=0):
+        """Return both `x` and `y` coordinates of a rotated trace
+        
+        Parameters
+        ----------
+        order : str
+            Order string
+            
+        x0, y0 : float
+            Reference position (i.e., in direct image)
+
+        t : float or `~numpy.ndarray`
+            Parameter where to evaluate the trace
+            
+        theta : float
+            CW rotation angle, in radians
+        
+        Returns
+        -------
+        dxr, dyr : float or `~np.ndarray`
+            Rotated trace coordinates as a function of `t`
+
+        """
+        dx = -self.wx + poly.POLY[self._DISPX_polyname[order]](self._DISPX_data[order],x0,y0,t)
+        dy = -self.wy + poly.POLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,t)
+
+        if theta != 0:
+            dxr, dyr = self._rotate_coords(dx, dy, theta=theta, origin=[0,0])
+            return dxr, dyr
+        else:
+            return dx, dy
+            
+    
+    def INVDISPXY(self, order, x0, y0, dx=None, dy=None, theta=0, t0=np.linspace(0,1,10)):
+        """Return independent variable `t` along rotated trace
+        
+        Parameters
+        ----------
+        order : str
+            Order string
+            
+        x0, y0 : float
+            Reference position (i.e., in direct image)
+
+        dx : float, `~numpy.ndarray` or None
+            `x` coordinate in *rotated* trace where to evaluate the trace
+            independent variable `t`.
+            
+        dy : float, `~numpy.ndarray` or None
+            Same as `dx` but evaluate along 'y' axis.
+        
+        t0 : `~np.ndarray`
+            Independent variable location where to evaluate the rotated trace.
+            For low-order trace shapes, this can be coarsely sampled as 
+            in the default.
+            
+        Returns
+        -------
+        tr : float or `~np.ndarray`
+            Independent variable `t` evaluated on the rotated trace at
+            `dx` or `dy`.
+
+        .. note::
+        
+        Order of execution is first check if `dx` supplied.  If not, then
+        check `dy`.  And if both are None, then return None (do nothing).
+        
+        """
+        if dx is not None:
+            xr, yr = self.DISPXY(order, x0, y0, t0, theta=theta)
+            so = np.argsort(xr)
+            tr = np.interp(dx, xr[so], t0[so])
+            return tr
+        
+        if dy is not None:
+            xr, yr = self.DISPXY(order, x0, y0, t0, theta=theta)
+            so = np.argsort(yr)
+            tr = np.interp(dy, yr[so], t0[so])
+            return tr
+                 
+        return None
+        
+    def DISPX(self,order,x0,y0,t,theta=0):
         """DISPX() eturns the x offset x'-x = DISPL(x0,y0,t) where x0,y0 is the 
         position on the detector, x'-x is the difference between direct and grism image x-coordinates and 0<t<1"""
-        return  -self.wx + poly.POLY[self.DISPX_POLYNAME[order]](self.DISPX_DATA[order],x0,y0,t)
+        dx = -self.wx + poly.POLY[self._DISPX_polyname[order]](self._DISPX_data[order],x0,y0,t)
+            
+        return  dx
 
     def DDISPX(self,order,x0,y0,t):
         """DDISPX returns the  1st derivative of DISPX() with respect to t  d(x'-x)/dt =  d(DISPX(x0,y0,t))/dt where x0,y0 is the position on the detector and 0<t<1"""
-        return  poly.DPOLY[self.DISPX_POLYNAME[order]](self.DISPX_DATA[order],x0,y0,t)
+        return  poly.DPOLY[self._DISPX_polyname[order]](self._DISPX_data[order],x0,y0,t)
 
     def DISPY(self,order,x0,y0,t):
         """DISPY() eturns the x offset 'y-y = DISPL(x0,y0,t) where x0,y0 is the 
         position on the detector, y'-y is the difference between direct and grism image y-coordinates and 0<t<1"""
-        return  -self.wy + poly.POLY[self.DISPY_POLYNAME[order]](self.DISPY_DATA[order],x0,y0,t)
+        return  -self.wy + poly.POLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,t)
 
     def DDISPY(self,order,x0,y0,t):
         """DDISPY returns the  1st derivative of DISPY() with respect to t  d(y'-y)/dt =  d(DISPY(x0,y0,t))/dt where x0,y0 is the position on the detector and 0<t<1"""
-        return poly.DPOLY[self.DISPY_POLYNAME[order]](self.DISPY_DATA[order],x0,y0,t)
+        return poly.DPOLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,t)
 
     def INVDISPL(self,order,x0,y0,l):
         """INVDISL() returns the t values corresponding to a given wavelength l, t = INVDISPL(x0,y0,l)"""
-        return poly.INVPOLY[self.DISPL_POLYNAME[order]](self.DISPL_DATA[order],x0,y0,l)
+        return poly.INVPOLY[self._DISPL_polyname[order]](self._DISPL_data[order],x0,y0,l)
 
     def INVDISPX(self,order,x0,y0,dx):
         """INVDISPX returns the x value corresponding to a given wavelength l, t = INVDISPL(x0,y0,l)"""
-        return poly.INVPOLY[self.DISPX_POLYNAME[order]](self.DISPX_DATA[order],x0,y0,dx+self.wx)
+        return poly.INVPOLY[self._DISPX_polyname[order]](self._DISPX_data[order],x0,y0,dx+self.wx)
 
     def INVDISPY(self,order,x0,y0,dy):
         """INVDISPY returns the y value corresponding to a given wavelength l, t = INVDISPL(x0,y0,l)"""
-        return poly.INVPOLY[self.DISPY_POLYNAME[order]](self.DISPY_DATA[order],x0,y0,dy+self.wy)    
+        return poly.INVPOLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,dy+self.wy)    
 
-    #def DLDX(self,order,x0,y0,t):
-    #    return self.DDISPL(order,x0,y0,t)/self.DDISPX(order,x0,y0,t)
-
-    #def DLDY(self,order,x0,y0,t):
-    #    return self.DDISPL(order,x0,y0,t)/self.DDISPY(order,x0,y0,t)
-
-    def __get_orders(self):
+    def _get_orders(self):
         """A helper function that parses the config file and finds all the Orders/BEAMS.
         Simply looks for the BEAM_ keywords"""
         orders = []
@@ -146,7 +250,7 @@ class Config(object):
                 orders.append(order)
         return orders
 
-    def __get_parameters(self,name,order,str_fmt="%s_%s_"):
+    def _get_parameters(self,name,order,str_fmt="%s_%s_"):
         """Return the 2D polynomial array stored in the config file"""
         str = str_fmt % (name,order)
         # Find out how many we have to store
@@ -174,7 +278,7 @@ class Config(object):
 
         return arr            
 
-    def __get_value(self,str,type=None):
+    def _get_value(self,str,type=None):
         """Helper function to simply return the value for a simple keyword parameters
         in the config file."""
         
@@ -195,10 +299,10 @@ class Config(object):
         return None
 
 
-    def __get_sensitivity(self,order):
+    def _get_sensitivity(self,order):
         """Helper function that looks for the name of the sensitivity file, reads it and
         stores the content in a simple list [WAVELENGTH, SENSITIVITY]."""
-        fname = os.path.join(self.GRISM_CONF_PATH,self.__get_value("SENSITIVITY_%s" % (order)))
+        fname = os.path.join(self.GRISM_CONF_PATH,self._get_value("SENSITIVITY_%s" % (order)))
         fin = fits.open(fname)
         wavs = fin[1].data.field("WAVELENGTH")[:]
         sens = fin[1].data.field("SENSITIVITY")[:]
@@ -207,4 +311,6 @@ class Config(object):
         sens[0:2] = 0.
         sens[-2:] = 0.
                 
-        return [wavs,sens]
+        return [wavs,sens]    
+    
+
