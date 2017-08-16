@@ -167,7 +167,7 @@ class Config(object):
             if len(ws)>0 and str in ws[0]:
                 i = int(ws[0].split(str)[-1])
                 if len(ws)-1 !=m:
-                    print "Wrong format for ",GRISM_CONF,name,order
+                    print("Wrong format for ",GRISM_CONF,name,order)
                     sys.exit(10)
                 vals = [float(ww) for ww in ws[1:]]
                 arr[i,0:m] = vals
