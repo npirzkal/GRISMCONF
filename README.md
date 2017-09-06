@@ -19,9 +19,9 @@ where order is configuration file specific but is usually "A", "B", "C" etc..., 
 
 These polynomials are a generalization of the old aXe grism configuration file polynomials.
 
-Configurations file can be found at https://npirzkal@bitbucket.org/npirzkal/grismwfc3.git for HST/WFC3 IR
+Configurations file can be found at https://github.com/npirzkal/GRISM_WFC3 for HST/WFC3 IR
 and
-https://npirzkal@bitbucket.org/npirzkal/grismnircam.git for JWST/NIRCAM
+https://github.com/npirzkal/GRISM_NIRCAM for JWST/NIRCAM
 # Using: #
 ## Example 1: ##
 We want to determine the x, y and wavelength of pixels containing the trace originating from a pixel at x0,y0 in the un-dispersed frame. We want to look at the dispersed pixels that are at location x+dxs on the dispersed image. dxs can be an array.:
