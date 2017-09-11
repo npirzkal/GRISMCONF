@@ -85,34 +85,34 @@ class Config(object):
             self.XRANGE[order] = self._get_value("XRANGE_%s" % (order),type=float)
             self.YRANGE[order] = self._get_value("YRANGE_%s" % (order),type=float)
 
-    # @staticmethod
-    # def _rotate_coords(dx, dy, theta=0, origin=[0,0]):
-    #     """Rotate cartesian coordinates CW about an origin
+    @staticmethod
+    def _rotate_coords(dx, dy, theta=0, origin=[0,0]):
+        """Rotate cartesian coordinates CW about an origin
         
-    #     Parameters
-    #     ----------
-    #     dx, dy : float or `~numpy.ndarray`
-    #         x and y coordinages
+        Parameters
+        ----------
+        dx, dy : float or `~numpy.ndarray`
+            x and y coordinages
                     
-    #     theta : float
-    #         CW rotation angle, in radians
+        theta : float
+            CW rotation angle, in radians
             
-    #     origin : [float,float]
-    #         Origin about which to rotate
+        origin : [float,float]
+            Origin about which to rotate
         
-    #     Returns
-    #     -------
-    #     dxr, dyr : float or `~numpy.ndarray`
-    #         Rotated versions of `dx` and `dy`
+        Returns
+        -------
+        dxr, dyr : float or `~numpy.ndarray`
+            Rotated versions of `dx` and `dy`
             
-    #     """
-    #     _mat = np.array([[np.cos(theta), -np.sin(theta)],
-    #                  [np.sin(theta), np.cos(theta)]])
+        """
+        _mat = np.array([[np.cos(theta), -np.sin(theta)],
+                     [np.sin(theta), np.cos(theta)]])
 
-    #     rot = np.dot(np.array([dx-origin[0], dy-origin[1]]).T, _mat)
-    #     dxr = rot[:,0]+origin[0]
-    #     dyr = rot[:,1]+origin[1]
-    #     return dxr, dyr
+        rot = np.dot(np.array([dx-origin[0], dy-origin[1]]).T, _mat)
+        dxr = rot[:,0]+origin[0]
+        dyr = rot[:,1]+origin[1]
+        return dxr, dyr
 
     def DISPL(self,order,x0,y0,t):
         """DISPL() returns the wavelength l = DISPL(x0,y0,t) where x0,y0 is the 
@@ -123,89 +123,89 @@ class Config(object):
         """DDISPL returns the wavelength 1st derivative with respect to t  l =  d(DISPL(x0,y0,t))/dt where x0,y0 is the position on the detector and 0<t<1"""
         return poly.DPOLY[self._DISPL_polyname[order]](self._DISPL_data[order],x0,y0,t)
 
-    # def DISPXY(self, order, x0, y0, t, theta=0):
-    #     """Return both `x` and `y` coordinates of a rotated trace
+    def DISPXY(self, order, x0, y0, t, theta=0):
+        """Return both `x` and `y` coordinates of a rotated trace
         
-    #     Parameters
-    #     ----------
-    #     order : str
-    #         Order string
+        Parameters
+        ----------
+        order : str
+            Order string
             
-    #     x0, y0 : float
-    #         Reference position (i.e., in direct image)
+        x0, y0 : float
+            Reference position (i.e., in direct image)
 
-    #     t : float or `~numpy.ndarray`
-    #         Parameter where to evaluate the trace
+        t : float or `~numpy.ndarray`
+            Parameter where to evaluate the trace
             
-    #     theta : float
-    #         CW rotation angle, in radians
+        theta : float
+            CW rotation angle, in radians
         
-    #     Returns
-    #     -------
-    #     dxr, dyr : float or `~np.ndarray`
-    #         Rotated trace coordinates as a function of `t`
+        Returns
+        -------
+        dxr, dyr : float or `~np.ndarray`
+            Rotated trace coordinates as a function of `t`
 
-    #     """
-    #     dx = -self.wx + poly.POLY[self._DISPX_polyname[order]](self._DISPX_data[order],x0,y0,t)
-    #     dy = -self.wy + poly.POLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,t)
+        """
+        dx = -self.wx + poly.POLY[self._DISPX_polyname[order]](self._DISPX_data[order],x0,y0,t)
+        dy = -self.wy + poly.POLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,t)
 
-    #     if theta != 0:
-    #         dxr, dyr = self._rotate_coords(dx, dy, theta=theta, origin=[0,0])
-    #         return dxr, dyr
-    #     else:
-    #         return dx, dy
+        if theta != 0:
+            dxr, dyr = self._rotate_coords(dx, dy, theta=theta, origin=[0,0])
+            return dxr, dyr
+        else:
+            return dx, dy
             
     
-    # def INVDISPXY(self, order, x0, y0, dx=None, dy=None, theta=0, t0=np.linspace(0,1,10)):
-    #     """Return independent variable `t` along rotated trace
+    def INVDISPXY(self, order, x0, y0, dx=None, dy=None, theta=0, t0=np.linspace(0,1,10)):
+        """Return independent variable `t` along rotated trace
         
-    #     Parameters
-    #     ----------
-    #     order : str
-    #         Order string
+        Parameters
+        ----------
+        order : str
+            Order string
             
-    #     x0, y0 : float
-    #         Reference position (i.e., in direct image)
+        x0, y0 : float
+            Reference position (i.e., in direct image)
 
-    #     dx : float, `~numpy.ndarray` or None
-    #         `x` coordinate in *rotated* trace where to evaluate the trace
-    #         independent variable `t`.
+        dx : float, `~numpy.ndarray` or None
+            `x` coordinate in *rotated* trace where to evaluate the trace
+            independent variable `t`.
             
-    #     dy : float, `~numpy.ndarray` or None
-    #         Same as `dx` but evaluate along 'y' axis.
+        dy : float, `~numpy.ndarray` or None
+            Same as `dx` but evaluate along 'y' axis.
         
-    #     t0 : `~np.ndarray`
-    #         Independent variable location where to evaluate the rotated trace.
-    #         For low-order trace shapes, this can be coarsely sampled as 
-    #         in the default.
+        t0 : `~np.ndarray`
+            Independent variable location where to evaluate the rotated trace.
+            For low-order trace shapes, this can be coarsely sampled as 
+            in the default.
             
-    #     Returns
-    #     -------
-    #     tr : float or `~np.ndarray`
-    #         Independent variable `t` evaluated on the rotated trace at
-    #         `dx` or `dy`.
+        Returns
+        -------
+        tr : float or `~np.ndarray`
+            Independent variable `t` evaluated on the rotated trace at
+            `dx` or `dy`.
 
-    #     .. note::
+        .. note::
         
-    #     Order of execution is first check if `dx` supplied.  If not, then
-    #     check `dy`.  And if both are None, then return None (do nothing).
+        Order of execution is first check if `dx` supplied.  If not, then
+        check `dy`.  And if both are None, then return None (do nothing).
         
-    #     """
-    #     if dx is not None:
-    #         xr, yr = self.DISPXY(order, x0, y0, t0, theta=theta)
-    #         so = np.argsort(xr)
-    #         f = interp1d_picklable(xr[so], t0[so])
-    #         tr = f(dx)
-    #         return tr
+        """
+        if dx is not None:
+            xr, yr = self.DISPXY(order, x0, y0, t0, theta=theta)
+            so = np.argsort(xr)
+            f = interp1d_picklable(xr[so], t0[so])
+            tr = f(dx)
+            return tr
         
-    #     if dy is not None:
-    #         xr, yr = self.DISPXY(order, x0, y0, t0, theta=theta)
-    #         so = np.argsort(yr)
-    #         f = interp1d_picklable(yr[so], t0[so])
-    #         tr = f(dy)
-    #         return tr
+        if dy is not None:
+            xr, yr = self.DISPXY(order, x0, y0, t0, theta=theta)
+            so = np.argsort(yr)
+            f = interp1d_picklable(yr[so], t0[so])
+            tr = f(dy)
+            return tr
                  
-    #     return None
+        return None
         
     def DISPX(self,order,x0,y0,t,theta=0):
         """DISPX() eturns the x offset x'-x = DISPL(x0,y0,t) where x0,y0 is the 
