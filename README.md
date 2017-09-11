@@ -13,7 +13,7 @@ and
 #!python
 t = INVDISPX(order,x0,y0,dx)
 t = INVDISPY(order,x0,y0,dy)
-t = INVDISL(order,x0,y0, wavelength)
+t = INVDISPL(order,x0,y0, wavelength)
 ```
 where order is configuration file specific but is usually "A", "B", "C" etc..., and t is a free variable 0<t<1.
 
