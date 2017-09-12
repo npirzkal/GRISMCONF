@@ -28,7 +28,23 @@ class interp1d_picklable:
 class Config(object):
     """Class to read and hold GRISM configuration info"""
     def __init__(self,GRISM_CONF,DIRFILTER=None):
-        """Read in Grism Configuration file and populate various things"""
+        """Return a Config object
+        
+        Parameters
+        ----------
+        GRISM_CONF : str
+            The full path and name to a grism configuration file
+            
+        DIRFILTER : str
+            The name of the direct filter so that filter wedge offsets can be included.
+            Should match the filter used when a direct image was used in the same visit as 
+            the grism observations
+            
+        Returns
+        -------
+        C : Config class object
+        """
+
         self.__version__=__version__
         self.GRISM_CONF = open(GRISM_CONF).readlines()
         self.GRISM_CONF_PATH = os.path.dirname(GRISM_CONF)
@@ -115,12 +131,40 @@ class Config(object):
         return dxr, dyr
 
     def DISPL(self,order,x0,y0,t):
-        """DISPL() returns the wavelength l = DISPL(x0,y0,t) where x0,y0 is the 
-        position on the detector and 0<t<1"""
+        """Returns the wavelength corresponding to a value t for an object at posittion x0,y0
+        
+        Parameters
+        ----------
+        x0, y0 : float or `~numpy.ndarray`
+            x and y coordinates in the direct image
+                    
+        t : float
+            Value of the t variable (usually 0<t<1)
+        
+        Returns
+        -------
+        wav : float or `~numpy.ndarray`
+            wavelength value
+            
+        """
         return poly.POLY[self._DISPL_polyname[order]](self._DISPL_data[order],x0,y0,t)
 
     def DDISPL(self,order,x0,y0,t):
-        """DDISPL returns the wavelength 1st derivative with respect to t  l =  d(DISPL(x0,y0,t))/dt where x0,y0 is the position on the detector and 0<t<1"""
+        """Returns the first derivate of the wavelength (wrt to t) for a value t for an object at posittion x0,y0
+        
+        Parameters
+        ----------
+        x0, y0 : float or `~numpy.ndarray`
+            x and y coordinates in the direct image
+                    
+        t : float
+            Value of the t variable (usually 0<t<1)
+        
+        Returns
+        -------
+        dwav : float or `~numpy.ndarray`
+            First derivative of the wavelength with respect to 't', as a function of 't'
+        """
         return poly.DPOLY[self._DISPL_polyname[order]](self._DISPL_data[order],x0,y0,t)
 
     def DISPXY(self, order, x0, y0, t, theta=0):
@@ -207,41 +251,179 @@ class Config(object):
                  
         return None
         
-    def DISPX(self,order,x0,y0,t,theta=0):
-        """DISPX() eturns the x offset x'-x = DISPL(x0,y0,t) where x0,y0 is the 
-        position on the detector, x'-x is the difference between direct and grism image x-coordinates and 0<t<1"""
+    def DISPX(self,order,x0,y0,t):
+        """Returns the x offset x'-x = DISPL(x0,y0,t) where x0,y0 is the 
+        position on the detector, x'-x is the difference between direct and grism image x-coordinates and 0<t<1
+        
+        Parameters
+        ----------
+        order : str
+            Order string
+            
+        x0, y0 : float
+            Reference position (i.e., in direct image)
+
+        t : float or `~numpy.ndarray`
+            Parameter where to evaluate the trace
+        
+        Returns
+        -------
+        dx : float or `~np.ndarray`
+            Trace x-coordinates as a function of `t`
+
+        """
         dx = -self.wx + poly.POLY[self._DISPX_polyname[order]](self._DISPX_data[order],x0,y0,t)
             
         return  dx
 
     def DDISPX(self,order,x0,y0,t):
-        """DDISPX returns the  1st derivative of DISPX() with respect to t  d(x'-x)/dt =  d(DISPX(x0,y0,t))/dt where x0,y0 is the position on the detector and 0<t<1"""
+        """Returns the first derivative of the x offset (x'-x) wrt to t, where x0,y0 is the 
+        position on the detector, x'-x is the difference between direct and grism image x-coordinates and 0<t<1
+        
+        Parameters
+        ----------
+        order : str
+            Order string
+            
+        x0, y0 : float
+            Reference position (i.e., in direct image)
+
+        t : float or `~numpy.ndarray`
+            Parameter where to evaluate the trace
+        
+        Returns
+        -------
+        dxdt : float or `~np.ndarray`
+            First derivative of the trace x-coordinates with respect to 't', as a function of `t`
+
+        """
         return  poly.DPOLY[self._DISPX_polyname[order]](self._DISPX_data[order],x0,y0,t)
 
     def DISPY(self,order,x0,y0,t):
-        """DISPY() eturns the x offset 'y-y = DISPL(x0,y0,t) where x0,y0 is the 
-        position on the detector, y'-y is the difference between direct and grism image y-coordinates and 0<t<1"""
+        """Returns the x offset (y'-y) wrt to t, where x0,y0 is the 
+        position on the detector, y'-y is the difference between direct and grism image y-coordinates and 0<t<1
+        
+        Parameters
+        ----------
+        order : str
+            Order string
+            
+        x0, y0 : float
+            Reference position (i.e., in direct image)
+
+        t : float or `~numpy.ndarray`
+            Parameter where to evaluate the trace
+        
+        Returns
+        -------
+        dydt : float or `~np.ndarray`
+            First derivative of the trace y-coordinates with respect to 't', as a function of `t`
+
+        """
         return  -self.wy + poly.POLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,t)
 
     def DDISPY(self,order,x0,y0,t):
-        """DDISPY returns the  1st derivative of DISPY() with respect to t  d(y'-y)/dt =  d(DISPY(x0,y0,t))/dt where x0,y0 is the position on the detector and 0<t<1"""
+        """Returns the first derivative of the y offset (y'-y) wrt to t, where x0,y0 is the 
+        position on the detector, y'-y is the difference between direct and grism image x-coordinates and 0<t<1
+        
+        Parameters
+        ----------
+        order : str
+            Order string
+            
+        x0, y0 : float
+            Reference position (i.e., in direct image)
+
+        t : float or `~numpy.ndarray`
+            Parameter where to evaluate the trace
+        
+        Returns
+        -------
+        dydt : float or `~np.ndarray`
+            First derivative of the trace y-coordinates with respect to 't', as a function of `t`
+
+        """
         return poly.DPOLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,t)
 
     def INVDISPL(self,order,x0,y0,l):
-        """INVDISL() returns the t values corresponding to a given wavelength l, t = INVDISPL(x0,y0,l)"""
+        """Returns the value of 't' that corresponds to a given wavelength for a source at position x0,y0
+        
+        Parameters
+        ----------
+        order : str
+            Order string
+            
+        x0, y0 : float
+            Reference position (i.e., in direct image)
+
+        l : float or `~numpy.ndarray`
+            Wavelength
+        
+        Returns
+        -------
+        t : float or `~np.ndarray`
+            `t` value
+
+        """
         return poly.INVPOLY[self._DISPL_polyname[order]](self._DISPL_data[order],x0,y0,l)
 
     def INVDISPX(self,order,x0,y0,dx):
-        """INVDISPX returns the x value corresponding to a given wavelength l, t = INVDISPL(x0,y0,l)"""
+        """Returns the value of 't' that corresponds to a given x-offset for a source at position x0,y0
+        
+        Parameters
+        ----------
+        order : str
+            Order string
+            
+        x0, y0 : float
+            Reference position (i.e., in direct image)
+
+        dx: float or `~numpy.ndarray`
+            x-offset between source and a given pixel
+        
+        Returns
+        -------
+        t : float or `~np.ndarray`
+            `t` value
+
+        """
         return poly.INVPOLY[self._DISPX_polyname[order]](self._DISPX_data[order],x0,y0,dx+self.wx)
 
     def INVDISPY(self,order,x0,y0,dy):
-        """INVDISPY returns the y value corresponding to a given wavelength l, t = INVDISPL(x0,y0,l)"""
+        """Returns the value of 't' that corresponds to a given y-offset for a source at position x0,y0
+        
+        Parameters
+        ----------
+        order : str
+            Order string
+            
+        x0, y0 : float
+            Reference position (i.e., in direct image)
+
+        dy: float or `~numpy.ndarray`
+            y-offset between source and a given pixel
+        
+        Returns
+        -------
+        t : float or `~np.ndarray`
+            `t` value
+
+        """        
         return poly.INVPOLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,dy+self.wy)    
 
     def _get_orders(self):
-        """A helper function that parses the config file and finds all the Orders/BEAMS.
-        Simply looks for the BEAM_ keywords"""
+        """Returns all the know orders in Config
+        
+        Parameters
+        ----------
+        
+        Returns
+        -------
+        orders: `array`
+            List of orders
+
+        """        
+
         orders = []
 
         # Get orders 
