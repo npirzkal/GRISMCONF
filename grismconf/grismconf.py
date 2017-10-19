@@ -78,6 +78,10 @@ class Config(object):
             self.wx = 0.
             self.wy = 0.
 
+        # Get physical size of detector
+        self.NAXIS = self._get_value("NAXIS",type=int)
+
+
         for order in self.orders:    
             self._DISPX_data[order] = self._get_parameters("DISPX",order)
             self._DISPY_data[order] = self._get_parameters("DISPY",order)
@@ -475,12 +479,15 @@ class Config(object):
                         return ws[1]
                     elif type==float:
                         return float(ws[1])
+                    elif type==int:
+                        return int(ws[1])
                 else:
                     if type==None:
                         return ws[1:]
                     elif type==float:
                         return [float(x) for x in ws[1:]]
-
+                    elif type==int:
+                        return [int(x) for x in ws[1:]]
         return None
 
 
