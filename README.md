@@ -22,6 +22,17 @@ These polynomials are a generalization of the old aXe grism configuration file p
 Configurations file can be found at https://github.com/npirzkal/GRISM_WFC3 for HST/WFC3 IR
 and
 https://github.com/npirzkal/GRISM_NIRCAM for JWST/NIRCAM
+# Installing:#
+
+Install using 
+```
+pip install grismconf
+```
+or clone and install using
+```
+python setup.py install
+```
+
 # Using: #
 ## Example 1: ##
 We want to determine the x, y and wavelength of pixels containing the trace originating from a pixel at x0,y0 in the un-dispersed frame. We want to look at the dispersed pixels that are at location x+dxs on the dispersed image. dxs can be an array.:
