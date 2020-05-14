@@ -22,7 +22,7 @@ These polynomials are a generalization of the old aXe grism configuration file p
 Configurations file can be found at https://github.com/npirzkal/GRISM_WFC3 for HST/WFC3 IR
 and
 https://github.com/npirzkal/GRISM_NIRCAM for JWST/NIRCAM
-# Installing:#
+# Installing:
 
 Install using 
 ```
