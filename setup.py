@@ -14,8 +14,11 @@ setup(
 	description='GRISM Configuration python code, described in ISR 2017-01: A More Generalized Coordinate Transformation Approach for Grisms, Pirzkal & Ryan 2017 http://www.stsci.edu/hst/wfc3/documents/ISRs/WFC3-2017-01.pdf',
 	author='Nor Pirzkal',
 	author_email='npirzkal@mac.com',
-    package_dir = {
-        'grismconf': 'grismconf',
+        package_dir = {
+            'grismconf': 'grismconf',
         },
-    packages=["grismconf"],
+	install_requires=[
+		'numpy', 'astropy', 'scipy'
+	],
+        packages=["grismconf"],
 )
