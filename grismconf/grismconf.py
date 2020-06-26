@@ -5,8 +5,6 @@ from astropy.io import fits
 from astropy.table import Table
 from scipy.interpolate import interp1d
 
-__version__ = 1.2
-
 class interp1d_picklable(object):
     """ class wrapper for piecewise linear function
     """
