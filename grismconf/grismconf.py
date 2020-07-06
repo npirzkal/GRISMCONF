@@ -44,7 +44,6 @@ class Config(object):
         C : Config class object
         """
 
-        self.__version__=__version__
         self.GRISM_CONF = open(GRISM_CONF).readlines()
         self.GRISM_CONF_PATH = os.path.dirname(GRISM_CONF)
         self.GRISM_CONF_FILE = os.path.basename(GRISM_CONF)
