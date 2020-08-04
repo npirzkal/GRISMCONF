@@ -79,6 +79,12 @@ class Config(object):
         # Get physical size of detector
         self.NAXIS = self._get_value("NAXIS",type=int)
 
+        # Load the name of a POM file
+        self.POM = None
+        try:
+            self.POM = self._get_value("POM")
+        except:
+            pass
 
         for order in self.orders:    
             self._DISPX_data[order] = self._get_parameters("DISPX",order)
