@@ -82,7 +82,7 @@ class Config(object):
         # Load the name of a POM file
         self.POM = None
         try:
-            self.POM = self._get_value("POM")
+            self.POM = os.path.join(self.GRISM_CONF_PATH,self._get_value("POM"))
         except:
             pass
 
@@ -509,4 +509,3 @@ class Config(object):
                 
         return [wavs,sens]    
     
-
