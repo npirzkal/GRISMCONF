@@ -375,7 +375,7 @@ class Config(object):
         """
         return poly.INVPOLY[self._DISPL_polyname[order]](self._DISPL_data[order],x0,y0,l)
 
-    def INVDISPX(self,order,x0,y0,dx):
+    def INVDISPX(self,order,x0,y0,dx,t0=np.linspace(0,1,10)):
         """Returns the value of 't' that corresponds to a given x-offset for a source at position x0,y0
         
         Parameters
@@ -388,16 +388,28 @@ class Config(object):
 
         dx: float or `~numpy.ndarray`
             x-offset between source and a given pixel
-        
+        t0 : `~np.ndarray`
+            Independent variable location where to evaluate the trace.
+            For low-order trace shapes, this can be coarsely sampled as 
+            in the default.
         Returns
         -------
         t : float or `~np.ndarray`
             `t` value
 
         """
-        return poly.INVPOLY[self._DISPX_polyname[order]](self._DISPX_data[order],x0,y0,dx+self.wx)
+        if self._DISPX_polyname[order] in poly.INVPOLY.keys():
+            return poly.INVPOLY[self._DISPX_polyname[order]](self._DISPX_data[order],x0,y0,dx+self.wx)
+        else:
+            xr = self.DISPX(order, x0, y0, t0)
+            so = np.argsort(xr)
+            f = interp1d_picklable(xr[so], t0[so])
+            tr = f(dx)
+            return tr
 
-    def INVDISPY(self,order,x0,y0,dy):
+        
+
+    def INVDISPY(self,order,x0,y0,dy,t0=np.linspace(0,1,10)):
         """Returns the value of 't' that corresponds to a given y-offset for a source at position x0,y0
         
         Parameters
@@ -410,14 +422,24 @@ class Config(object):
 
         dy: float or `~numpy.ndarray`
             y-offset between source and a given pixel
-        
+        t0 : `~np.ndarray`
+            Independent variable location where to evaluate the trace.
+            For low-order trace shapes, this can be coarsely sampled as 
+            in the default.
         Returns
         -------
         t : float or `~np.ndarray`
             `t` value
 
         """        
-        return poly.INVPOLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,dy+self.wy)    
+        if self._DISPY_polyname[order] in poly.INVPOLY.keys():
+            return poly.INVPOLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,dy+self.wy)
+        else:      
+            xr, yr = self.DISPXY(order, x0, y0, t0)
+            so = np.argsort(yr)
+            f = interp1d_picklable(yr[so], t0[so])
+            tr = f(dy)
+            return tr
 
     def _get_orders(self):
         """Returns all the know orders in Config
