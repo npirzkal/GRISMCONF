@@ -86,6 +86,13 @@ class Config(object):
         except:
             pass
 
+        # Load the name of a dispersed background model file
+        self.BCK = None
+        try:
+            self.BCK = os.path.join(self.GRISM_CONF_PATH,self._get_value("BACKGROUND"))
+        except:
+            pass
+
         for order in self.orders:    
             self._DISPX_data[order] = self._get_parameters("DISPX",order)
             self._DISPY_data[order] = self._get_parameters("DISPY",order)
@@ -208,7 +215,7 @@ class Config(object):
             return dx, dy
             
     
-    def INVDISPXY(self, order, x0, y0, dx=None, dy=None, theta=0, t0=np.linspace(0,1,10)):
+    def INVDISPXY(self, order, x0, y0, dx=None, dy=None, theta=0, t0=np.linspace(-1,2,40)):
         """Return independent variable `t` along rotated trace
         
         Parameters
@@ -353,7 +360,7 @@ class Config(object):
         """
         return poly.DPOLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,t)
 
-    def INVDISPL(self,order,x0,y0,l):
+    def INVDISPL(self,order,x0,y0,l,t0=np.linspace(-1,2,40)):
         """Returns the value of 't' that corresponds to a given wavelength for a source at position x0,y0
         
         Parameters
@@ -366,16 +373,28 @@ class Config(object):
 
         l : float or `~numpy.ndarray`
             Wavelength
-        
+        t0 : `~np.ndarray`
+            Independent variable location where to evaluate the trace.
+            For low-order trace shapes, this can be coarsely sampled as 
+            in the default.
         Returns
         -------
         t : float or `~np.ndarray`
             `t` value
 
         """
-        return poly.INVPOLY[self._DISPL_polyname[order]](self._DISPL_data[order],x0,y0,l)
 
-    def INVDISPX(self,order,x0,y0,dx,t0=np.linspace(0,1,10)):
+        if self._DISPL_polyname[order] in poly.INVPOLY.keys():
+            return poly.INVPOLY[self._DISPL_polyname[order]](self._DISPL_data[order],x0,y0,l)
+        else:
+            xr = self.DISPL(order, x0, y0, t0)
+            so = np.argsort(xr)
+            f = interp1d_picklable(xr[so], t0[so])
+            tr = f(l)
+            return tr
+
+
+    def INVDISPX(self,order,x0,y0,dx,t0=np.linspace(-1,2,40)):
         """Returns the value of 't' that corresponds to a given x-offset for a source at position x0,y0
         
         Parameters
@@ -409,7 +428,7 @@ class Config(object):
 
         
 
-    def INVDISPY(self,order,x0,y0,dy,t0=np.linspace(0,1,10)):
+    def INVDISPY(self,order,x0,y0,dy,t0=np.linspace(-1,2,40)):
         """Returns the value of 't' that corresponds to a given y-offset for a source at position x0,y0
         
         Parameters

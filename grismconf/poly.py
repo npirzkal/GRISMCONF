@@ -67,6 +67,19 @@ def POLY23(e,x,y,t):
 def DPOLY23(e,x,y,t):
 	return (e[1,0] + x*e[1,1] + y*e[1,2] + x**2*e[1,3] + x*y*e[1,4] + y**2*e[1,5] + x**3*e[1,6] + x**2*y*e[1,7] + x*y**2*e[1,8] + y**3*e[1,9]) + 2*t*(e[2,0] + x*e[2,1] + y*e[2,2] + x**2*e[2,3] + x*y*e[2,4] + y**2*e[2,5] + x**3*e[2,6] + x**2*y*e[2,7] + x*y**2*e[2,8] + y**3*e[2,9])
 
+def POLYn2(e,x,y,t):
+	n = np.shape(e)[0]
+	f = 0
+	for i in range(n):
+		f = f + t**i * (e[i,0] + x*e[i,1] + y*e[i,2] + x*x*e[i,3] + x*y*e[i,4] + y**2*e[i,5])
+	return f
+
+def DPOLYn2(e,x,y,t):
+	n = np.shape(e)[0]
+	f = 0
+	for i in range(1,n):
+		f = f + (i)*t**(i-1) * (e[i,0] + x*e[i,1] + y*e[i,2] + x*x*e[i,3] + x*y*e[i,4] + y**2*e[i,5])
+	return f
 
 POLY = {}
 DPOLY = {}
@@ -98,6 +111,10 @@ INVPOLY[(2,3)] = INVPOLY11
 INVPOLY[(2,6)] = INVPOLY12
 INVPOLY[(2,10)] = INVPOLY12
 
+# Load higher order 2nd order polynomial general function
+for i in range(4,20):
+	POLY[(i,6)] = POLYn2
+	DPOLY[(i,6)] = DPOLYn2
 
 def npol(m):
 	return int((m + 1)**2/2. + (m + 1)/2.)
