@@ -5,7 +5,6 @@ from astropy.io import fits
 from astropy.table import Table
 from scipy.interpolate import interp1d
 
-
 class interp1d_picklable(object):
     """ class wrapper for piecewise linear function
     """
@@ -15,7 +14,6 @@ class interp1d_picklable(object):
         self.yi = yi
         self.args = kwargs
         self.f = interp1d(xi, yi, **kwargs)
-
     def __call__(self, xnew):
         return self.f(xnew)
 
@@ -23,7 +21,11 @@ class interp1d_picklable(object):
         return self.xi, self.yi, self.args
 
     def __setstate__(self, state):
+        self.xi = state[0]
+        self.yi = state[1]
+        self.args = state[2]
         self.f = interp1d(state[0], state[1], **state[2])
+
 
 class Config(object):
     """Class to read and hold GRISM configuration info"""
@@ -112,7 +114,9 @@ class Config(object):
             self.WRANGE[order] = [wmin,wmax]
 
             self.SENS[order] = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
-            
+            # print(self.SENS[order].xi)
+            # print(self.SENS[order].yi)
+            # print(self.SENS[order].args)
 
             self.XRANGE[order] = self._get_value("XRANGE_%s" % (order),type=float)
             self.YRANGE[order] = self._get_value("YRANGE_%s" % (order),type=float)
