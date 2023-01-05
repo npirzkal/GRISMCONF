@@ -53,10 +53,19 @@ class Config(object):
         self._DISPX_data = {}
         self._DISPY_data = {}
         self._DISPL_data = {}
+        
+        self._INVDISPX_data = {}
+        self._INVDISPY_data = {}
+        self._INVDISPL_data = {}
 
         self._DISPX_polyname = {}
         self._DISPY_polyname = {}
         self._DISPL_polyname = {}
+
+        self._INVDISPX_polyname = {}
+        self._INVDISPY_polyname = {}
+        self._INVDISPL_polyname = {}
+
 
         self.SENS = {}
         self.SENS_data = {}
@@ -105,6 +114,14 @@ class Config(object):
             self._DISPL_polyname[order] = np.shape(self._DISPL_data[order])
 
             self.SENS_data[order] = self._get_sensitivity(order)
+
+            self._INVDISPX_data[order] = self._get_parameters("INVDISPX",order)
+            self._INVDISPY_data[order] = self._get_parameters("INVDISPY",order)
+            self._INVDISPL_data[order] = self._get_parameters("INVDISPL",order)
+            
+            self._INVDISPX_polyname[order] = np.shape(self._INVDISPX_data[order])
+            self._INVDISPY_polyname[order] = np.shape(self._INVDISPY_data[order])
+            self._INVDISPL_polyname[order] = np.shape(self._INVDISPL_data[order])
 
             vg = self.SENS_data[order][1]>np.max(self.SENS_data[order][1])*1e-3
             wmin = np.min(self.SENS_data[order][0][vg])
@@ -387,12 +404,15 @@ class Config(object):
 
         if self._DISPL_polyname[order] in poly.INVPOLY.keys():
             return poly.INVPOLY[self._DISPL_polyname[order]](self._DISPL_data[order],x0,y0,l)
-        else:
+        elif len(self._INVDISPL_data[order])==0:
             xr = self.DISPL(order, x0, y0, t0)
             so = np.argsort(xr)
-            f = interp1d_picklable(xr[so], t0[so])
+            f = interp1d_picklable(xr[so], t0[so],bounds_error=False,fill_value="extrapolate")
             tr = f(l)
             return tr
+        else:
+            return poly.POLY[self._INVDISPL_polyname[order]](self._INVDISPL_data[order],x0,y0,l)
+
 
 
     def INVDISPX(self,order,x0,y0,dx,t0=np.linspace(-1,2,40)):
@@ -420,12 +440,15 @@ class Config(object):
         """
         if self._DISPX_polyname[order] in poly.INVPOLY.keys():
             return poly.INVPOLY[self._DISPX_polyname[order]](self._DISPX_data[order],x0,y0,dx+self.wx)
-        else:
+        elif len(self._INVDISPX_data[order])==0:
             xr = self.DISPX(order, x0, y0, t0)
             so = np.argsort(xr)
             f = interp1d_picklable(xr[so], t0[so])
             tr = f(dx)
             return tr
+        else:
+            return poly.POLY[self._INVDISPX_polyname[order]](self._INVDISPX_data[order],x0,y0,dx)
+
 
         
 
@@ -454,12 +477,15 @@ class Config(object):
         """        
         if self._DISPY_polyname[order] in poly.INVPOLY.keys():
             return poly.INVPOLY[self._DISPY_polyname[order]](self._DISPY_data[order],x0,y0,dy+self.wy)
-        else:      
+        elif len(self._INVDISPY_data[order])==0:
             xr, yr = self.DISPXY(order, x0, y0, t0)
             so = np.argsort(yr)
             f = interp1d_picklable(yr[so], t0[so])
             tr = f(dy)
             return tr
+        else:
+            return poly.POLY[self._INVDISPY_polyname[order]](self._INVDISPY_data[order],x0,y0,dy)
+
 
     def _get_orders(self):
         """Returns all the know orders in Config
@@ -494,7 +520,7 @@ class Config(object):
         for l in self.GRISM_CONF:
             if l[0]=="#": continue
             ws = l.split()
-            if len(ws)>0 and str in ws[0]:
+            if len(ws)>0 and str==ws[0][0:len(str)]:
                 i = ws[0].split(str)[-1]
                 n = n + 1
                 m = len(ws)-1
@@ -503,10 +529,10 @@ class Config(object):
 
         for l in self.GRISM_CONF:
             ws = l.split()
-            if len(ws)>0 and str in ws[0]:
+            if len(ws)>0 and str==ws[0][0:len(str)]:
                 i = int(ws[0].split(str)[-1])
                 if len(ws)-1 !=m:
-                    print("Wrong format for ",GRISM_CONF,name,order)
+                    print("Wrong format for ",self.GRISM_CONF,name,order)
                     sys.exit(10)
                 vals = [float(ww) for ww in ws[1:]]
                 arr[i,0:m] = vals
