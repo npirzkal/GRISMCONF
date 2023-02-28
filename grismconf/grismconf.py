@@ -89,12 +89,36 @@ class Config(object):
         # Get physical size of detector
         self.NAXIS = self._get_value("NAXIS",type=int)
 
+        self.rotation_theta = 0.
+        self.FWCPOS_REF = None
+        try:
+            self.FWCPOS_REF = float(self._get_value("FWCPOS_REF"))
+        except:
+            pass
+
         # Load the name of a POM file
         self.POM = None
         try:
             self.POM = os.path.join(self.GRISM_CONF_PATH,self._get_value("POM"))
         except:
             pass
+
+        # Load POMX and POMY polynomials if they are specified
+        self.POMX = None
+        self.POMY = None
+        self.POM_POLYGON = None
+        try:
+            self.POMX = np.array(self._get_value("POMX")).astype(float)
+        except:
+            pass
+
+        try:
+            self.POMY = np.array(self._get_value("POMY")).astype(float)
+        except:
+            pass
+
+        if self.POMX is not None and self.POMY is not None:
+            self.POM_POLYGON = np.array([self.POMX,self.POMY]).transpose()
 
         # Load the name of a dispersed background model file
         self.BCK = None
@@ -134,8 +158,12 @@ class Config(object):
             self.XRANGE[order] = self._get_value("XRANGE_%s" % (order),type=float)
             self.YRANGE[order] = self._get_value("YRANGE_%s" % (order),type=float)
 
-    @staticmethod
-    def _rotate_coords(dx, dy, theta=0, origin=[0,0]):
+    def set_rotation(self,fwcpos = None):
+        if fwcpos is not None:
+            #print(self.FWCPOS_REF,fwcpos)
+            self.rotation_theta = np.radians(fwcpos-self.FWCPOS_REF)
+
+    def rotate_trace(self,dx, dy, theta=None, origin=[0,0]):
         """Rotate cartesian coordinates CW about an origin
         
         Parameters
@@ -155,6 +183,9 @@ class Config(object):
             Rotated versions of `dx` and `dy`
             
         """
+
+        if theta is None:
+            theta = self.rotation_theta
         _mat = np.array([[np.cos(theta), -np.sin(theta)],
                      [np.sin(theta), np.cos(theta)]])
 
@@ -162,6 +193,31 @@ class Config(object):
         dxr = rot[:,0]+origin[0]
         dyr = rot[:,1]+origin[1]
         return dxr, dyr
+
+    def is_inside_POM(self,order,xs,ys,XRANGE=False):
+        """Check if points xs,ys are within the POM. Uses self.POM_POLYGON is availanle, otherwise XRANGE,YRANGE"""
+        if self.POM_POLYGON is not None and XRANGE is not True:
+            #print("use polygon")
+            import matplotlib.path as mpltPath
+            points = np.array([xs,ys]).transpose()
+            path = mpltPath.Path(self.POM_POLYGON)
+            ok = path.contains_points(points)
+            return ok
+        if self.XRANGE[order] is not None and self.YRANGE[order] is not None:
+            #print("use xrange")
+            xs = np.array(xs)
+            ys = np.array(ys)
+            xminus = self.XRANGE[order][0]
+            xplus = self.XRANGE[order][1]
+            yminus = self.YRANGE[order][0]
+            yplus = self.YRANGE[order][1]
+        
+            ok = (xs<self.NAXIS[1]+xplus) 
+            ok = ok & (xs>xminus) 
+            ok = ok & (ys<self.NAXIS[0]+yplus) 
+            ok = ok & (ys>yminus) 
+            return ok
+
 
     def DISPL(self,order,x0,y0,t):
         """Returns the wavelength corresponding to a value t for an object at posittion x0,y0

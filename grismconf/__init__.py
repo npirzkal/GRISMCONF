@@ -1,4 +1,4 @@
 from .grismconf import Config
 #from . import poly
-__version__ = "1.35"
+__version__ = "1.39"
 

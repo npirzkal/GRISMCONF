@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
 	name='grismconf',
-	version='1.35',
+	version='1.39',
 	description='GRISM Configuration python code, described in ISR 2017-01: A More Generalized Coordinate Transformation Approach for Grisms, Pirzkal & Ryan 2017 http://www.stsci.edu/hst/wfc3/documents/ISRs/WFC3-2017-01.pdf',
 	url='https://github.com/npirzkal/GRISMCONF',
 	author='Nor Pirzkal',
