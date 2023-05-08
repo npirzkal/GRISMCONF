@@ -118,7 +118,8 @@ class Config(object):
             pass
 
         if self.POMX is not None and self.POMY is not None:
-            self.POM_POLYGON = np.array([self.POMX,self.POMY]).transpose()
+            if np.isfinite(self.POMX) and np.isfinite(self.POMY):
+                self.POM_POLYGON = np.array([self.POMX,self.POMY]).transpose()
 
         # Load the name of a dispersed background model file
         self.BCK = None
@@ -158,6 +159,9 @@ class Config(object):
             self.XRANGE[order] = self._get_value("XRANGE_%s" % (order),type=float)
             self.YRANGE[order] = self._get_value("YRANGE_%s" % (order),type=float)
 
+    def repickle_sens(self,order):
+        self.SENS[order] = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
+
     def set_rotation(self,fwcpos = None):
         if fwcpos is not None:
             #print(self.FWCPOS_REF,fwcpos)
@@ -196,8 +200,9 @@ class Config(object):
 
     def is_inside_POM(self,order,xs,ys,XRANGE=False):
         """Check if points xs,ys are within the POM. Uses self.POM_POLYGON is availanle, otherwise XRANGE,YRANGE"""
+        print("is_inside:",self.POM_POLYGON)
         if self.POM_POLYGON is not None and XRANGE is not True:
-            #print("use polygon")
+            print("use polygon")
             import matplotlib.path as mpltPath
             points = np.array([xs,ys]).transpose()
             path = mpltPath.Path(self.POM_POLYGON)
