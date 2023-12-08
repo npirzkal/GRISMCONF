@@ -118,7 +118,7 @@ class Config(object):
             pass
 
         if self.POMX is not None and self.POMY is not None:
-            if np.isfinite(self.POMX) and np.isfinite(self.POMY):
+            if np.isfinite(self.POMX).all() and np.isfinite(self.POMY).all():
                 self.POM_POLYGON = np.array([self.POMX,self.POMY]).transpose()
 
         # Load the name of a dispersed background model file
@@ -200,9 +200,9 @@ class Config(object):
 
     def is_inside_POM(self,order,xs,ys,XRANGE=False):
         """Check if points xs,ys are within the POM. Uses self.POM_POLYGON is availanle, otherwise XRANGE,YRANGE"""
-        print("is_inside:",self.POM_POLYGON)
+        #print("is_inside:",self.POM_POLYGON)
         if self.POM_POLYGON is not None and XRANGE is not True:
-            print("use polygon")
+            #print("use polygon")
             import matplotlib.path as mpltPath
             points = np.array([xs,ys]).transpose()
             path = mpltPath.Path(self.POM_POLYGON)
@@ -628,10 +628,10 @@ class Config(object):
         """Helper function that looks for the name of the sensitivity file, reads it and
         stores the content in a simple list [WAVELENGTH, SENSITIVITY]."""
         fname = os.path.join(self.GRISM_CONF_PATH,self._get_value("SENSITIVITY_%s" % (order)))
-        fin = fits.open(fname)
-        wavs = fin[1].data.field("WAVELENGTH")[:]
-        sens = fin[1].data.field("SENSITIVITY")[:]
-        fin.close()        
+        with fits.open(fname) as fin:
+            wavs = fin[1].data.field("WAVELENGTH")[:]*1
+            sens = fin[1].data.field("SENSITIVITY")[:]*1
+            
         # Fix for cases where sensitivity is not zero on edges
         sens[0:2] = 0.
         sens[-2:] = 0.

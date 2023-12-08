@@ -47,7 +47,11 @@ y0 = 600.1
 
 # Load the Grism Configuration file
 C = grismconf.Config(“NIRCAM_R.conf")
-# Compute the t values corresponding to the exact offsets
+# edsges of spectra (use t=0 and t=1)
+dx01 = C.DISPX("+1",x0,y0,np.array([0,1]))
+# Get a list of all dxs value along this trace
+dxs = np.arange(dx01[0],dx01[1])
+# Compute the t values corresponding to the exact offsets dxs
 ts = C.INVDISPX(“A”,x0,y0,dxs)
 # Compute the dys values for the same pixels
 dys = C.DISPY(“A”,x0,y0,ts)
