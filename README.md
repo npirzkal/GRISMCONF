@@ -15,7 +15,7 @@ t = INVDISPX(order,x0,y0,dx)
 t = INVDISPY(order,x0,y0,dy)
 t = INVDISPL(order,x0,y0, wavelength)
 ```
-where order is configuration file specific but is usually "A", "B", "C" etc..., and t is a free variable 0<t<1.
+where order is configuration file specific but is usually "+1", "+2", "+3" etc..., and t is a free variable 0<t<1.
 
 These polynomials are a generalization of the old aXe grism configuration file polynomials.
 
