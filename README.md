@@ -1,6 +1,6 @@
 # GRISMCONF
 
-This module implements the new grism configuration described in Pirzkal and Ryan 2016. As such, it provides the dispersion polynomials:
+This module implements the new grism configuration described in Pirzkal and Ryan 2016 (https://www.stsci.edu/files/live/sites/www/files/home/hst/instrumentation/wfc3/documentation/instrument-science-reports-isrs/_documents/2017/WFC3-2017-01.pdf). As such, it provides the dispersion polynomials:
 ```
 #!python
 
