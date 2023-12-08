@@ -52,11 +52,11 @@ dx01 = C.DISPX("+1",x0,y0,np.array([0,1]))
 # Get a list of all dxs value along this trace
 dxs = np.arange(dx01[0],dx01[1])
 # Compute the t values corresponding to the exact offsets dxs
-ts = C.INVDISPX(“A”,x0,y0,dxs)
+ts = C.INVDISPX("+1",x0,y0,dxs)
 # Compute the dys values for the same pixels
-dys = C.DISPY(“A”,x0,y0,ts)
+dys = C.DISPY("+1",x0,y0,ts)
 # Compute wavelength of each of the pixels
-wavs = C.DISPL(“A”,x0,y0,ts)
+wavs = C.DISPL("+1",x0,y0,ts)
 
 ```
 
@@ -78,15 +78,15 @@ Computes what is needed to simulate the dispersion of a pixel. The free variable
 # We select a sensible set of values for the variable t. Since 0<t<1 corresponfs to lambda_min<lambda<lambda_max for the spectral order. 
 # If we want to oversample (in the lambda direction by a factor of fac, we use:
 
-dt = 1/(C.DISPX(“A”,x0,y0,0)-C.DISPX(“A”,x0,y0,1)) / fac
+dt = 1/(C.DISPX("+1",x0,y0,0)-C.DISPX("+1",x0,y0,1)) / fac
 t = np.arange(0,1,dt)
 
 # We can now select where the x, y and wavelength of the dispersed pixels:
 #or, to generate a fake spectrum:
 # By default t valid values are 0<t<1
-dxs = DISPX(“A”,x0,y0,t)
-dys = DISPY(“A”,x0,y0,t)
-wavs = DISPL(“A”,x0,y0,t)
+dxs = DISPX("+1",x0,y0,t)
+dys = DISPY("+1",x0,y0,t)
+wavs = DISPL("+1",x0,y0,t)
 ```
 
 
