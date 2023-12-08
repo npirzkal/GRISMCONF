@@ -67,7 +67,7 @@ What is the dispersion in Angstrom per pixel at the left edge of the spectrum (t
 ```
 #!python
 
-C.DDISPL(order,x0,y0,0)/C.DDISPX(order,x0,y0,0)
+C.DDISPL("+1",x0,y0,0)/C.DDISPX(order,x0,y0,0)
 ```
 
 ## Example 3: ##
