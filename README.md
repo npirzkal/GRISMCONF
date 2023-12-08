@@ -47,7 +47,7 @@ y0 = 600.1
 
 # Load the Grism Configuration file
 C = grismconf.Config(“NIRCAM_R.conf")
-# edsges of spectra (use t=0 and t=1)
+# edges of spectra (use t=0 and t=1)
 dx01 = C.DISPX("+1",x0,y0,np.array([0,1]))
 # Get a list of all dxs value along this trace
 dxs = np.arange(dx01[0],dx01[1])
