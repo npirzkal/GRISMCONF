@@ -105,5 +105,4 @@ Note: the assign_wcs as well as the photom steps must have be ran on fits file d
 #!python
 wfss_file = "/Users/npirzkal/Dropbox/NIRCAM/tutorial/jw01076103001_02101_00001_nrcalong_rate.fits"
 C = grismconf.Config(wfss_file)
-'''
-
+```
