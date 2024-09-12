@@ -1,4 +1,5 @@
 from . import poly
+from . import specwcs
 import numpy as np 
 import os
 from astropy.io import fits
@@ -27,7 +28,70 @@ class interp1d_picklable(object):
 
 class Config(object):
     """Class to read and hold GRISM configuration info"""
-    def __init__(self,GRISM_CONF,DIRFILTER=None):
+
+
+    def __init__(self,filename,DIRFILTER=None):
+        
+        try:
+            fits.open(filename) # file tpe check...
+            self.__init_DATAMODEL(filename)
+        except OSError:
+            self.__init_GRISMCONF(filename,DIRFILTER=None)
+
+    def __init_DATAMODEL(self,filename):
+
+        print(f"Loading from datamodel of {filename}")
+        
+
+        self._DISPX_data = {}
+        self._DISPY_data = {}
+        self._DISPL_data = {}
+        
+        self._INVDISPX_data = {}
+        self._INVDISPY_data = {}
+        self._INVDISPL_data = {}
+
+        self._DISPX_polyname = {}
+        self._DISPY_polyname = {}
+        self._DISPL_polyname = {}
+
+        self._INVDISPX_polyname = {}
+        self._INVDISPY_polyname = {}
+        self._INVDISPL_polyname = {}
+
+        self.SENS = {}
+        self.SENS_data = {}
+
+        # Wavelength range of the grism
+        self.WRANGE = {}
+        
+        self._DISPX_data,self._DISPY_data,self._DISPL_data,self.SENS_data = specwcs.specwcs_poly(filename)
+        self.orders = list(self._DISPX_data.keys())
+        self.wx = 0.
+        self.wy = 0.
+        
+        for order in self.orders:    
+            
+            #self.SENS[order] = self._get_sensitivity(order)
+            
+            self._DISPX_polyname[order] = np.shape(self._DISPX_data[order])
+            self._DISPY_polyname[order] = np.shape(self._DISPY_data[order])
+            self._DISPL_polyname[order] = np.shape(self._DISPL_data[order])
+
+            #self.SENS_data[order] = self._get_sensitivity(order)
+
+            vg = self.SENS_data[order][1]>np.max(self.SENS_data[order][1])*1e-3
+            wmin = np.min(self.SENS_data[order][0][vg])
+            wmax = np.max(self.SENS_data[order][0][vg])
+            self.WRANGE[order] = [wmin,wmax]
+
+            self.SENS[order] = interp1d_picklable(self.SENS_data[order][0],self.SENS_data[order][1],bounds_error=False,fill_value=0.)
+            
+
+            #self.XRANGE[order] = self._get_value("XRANGE_%s" % (order),type=float)
+            #self.YRANGE[order] = self._get_value("YRANGE_%s" % (order),type=float)
+
+    def __init_GRISMCONF(self,GRISM_CONF,DIRFILTER=None):
         """Return a Config object
         
         Parameters
@@ -44,6 +108,7 @@ class Config(object):
         -------
         C : Config class object
         """
+
 
         self.GRISM_CONF = open(GRISM_CONF).readlines()
         self.GRISM_CONF_PATH = os.path.dirname(GRISM_CONF)
