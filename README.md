@@ -97,4 +97,13 @@ the y-size is just:
 C.DDISPL(order,x0,y0,t)/C.DDISPY(order,x0,y0,t)
 
 
-etc etc etc…
+## Example 4: ##
+Load the grism configuration information from a previously populated JWST datamodel from a fits files:
+Note: the assign_wcs as well as the photom steps must have be ran on fits file during processing so that the WFSS information is already populated. All polynomials as well as the sensitivity can be loaded in this manner. The POM information and WFSS background calibration file names are not included in this case.
+
+```
+#!python
+wfss_file = "/Users/npirzkal/Dropbox/NIRCAM/tutorial/jw01076103001_02101_00001_nrcalong_rate.fits"
+C = grismconf.Config(wfss_file)
+'''
+
