@@ -71,14 +71,14 @@ class Config(object):
         self.wy = 0.
         
         for order in self.orders:    
-            
-            #self.SENS[order] = self._get_sensitivity(order)
-            
+                        
             self._DISPX_polyname[order] = np.shape(self._DISPX_data[order])
             self._DISPY_polyname[order] = np.shape(self._DISPY_data[order])
             self._DISPL_polyname[order] = np.shape(self._DISPL_data[order])
 
-            #self.SENS_data[order] = self._get_sensitivity(order)
+            self._INVDISPX_data[order] = []
+            self._INVDISPY_data[order] = []
+            self._INVDISPL_data[order] = []
 
             vg = self.SENS_data[order][1]>np.max(self.SENS_data[order][1])*1e-3
             wmin = np.min(self.SENS_data[order][0][vg])

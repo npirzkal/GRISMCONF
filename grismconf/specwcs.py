@@ -118,6 +118,8 @@ def specwcs_poly(wfss_file,order=1):
             _DISPY_data[sorder] = np.array([reformat_poly(p2d) for p2d in t.ymodels[g]])
             if len(t.ymodels[g])==1: _DISPY_data[sorder] = _DISPY_data[sorder][0]
 
+            if isinstance(t.lmodels[g], polynomial.Polynomial1D):
+                print("yumm give me some more")
             _DISPL_data[sorder] = np.array([reformat_poly(p2d) for p2d in t.lmodels[g]])
             if len(t.lmodels[g])==1: _DISPL_data[sorder] = _DISPL_data[sorder][0]
 

@@ -81,6 +81,20 @@ def DPOLYn2(e,x,y,t):
 		f = f + (i)*t**(i-1) * (e[i,0] + x*e[i,1] + y*e[i,2] + x*x*e[i,3] + x*y*e[i,4] + y**2*e[i,5])
 	return f
 
+def POLYn3(e,x,y,t):
+	n = np.shape(e)[0]
+	f = 0
+	for i in range(n):
+		f = f + t**i * (e[i,0] + x*e[i,1] + y*e[i,2] + x**2*e[i,3] + x*y*e[i,4] + y**2*e[i,5] + x**3*e[i,6] + x**2*y*e[i,7] + x*y**2*e[i,8] + y**3*e[i,9]) 
+	return f
+
+def DPOLYn3(e,x,y,t):
+	n = np.shape(e)[0]
+	f = 0
+	for i in range(1,n):
+		f = f + (i)*t**(i-1) * (e[i,0] + x*e[i,1] + y*e[i,2] + x**2*e[i,3] + x*y*e[i,4] + y**2*e[i,5] + x**3*e[i,6] + x**2*y*e[i,7] + x*y**2*e[i,8] + y**3*e[i,9])
+	return f
+
 POLY = {}
 DPOLY = {}
 INVPOLY = {}
@@ -115,6 +129,9 @@ INVPOLY[(2,10)] = INVPOLY12
 for i in range(4,20):
 	POLY[(i,6)] = POLYn2
 	DPOLY[(i,6)] = DPOLYn2
+
+	POLY[(i,10)] = POLYn3
+	DPOLY[(i,10)] = DPOLYn3
 
 def npol(m):
 	return int((m + 1)**2/2. + (m + 1)/2.)
